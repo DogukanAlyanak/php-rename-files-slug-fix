@@ -1,1 +1,2 @@
-"# php-rename-files-slug-fix" 
+Günü kurtarmak için yazılmış mini program.
+mali değeri yoktur. ahahha.
