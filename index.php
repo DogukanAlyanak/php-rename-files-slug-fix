@@ -8,16 +8,15 @@
 // $eskiDosyaAdi = 'eski_dosya.txt';
 // $yeniDosyaAdi = 'yeni_dosya.txt';
 // 
-// echo changeFileName($eskiDosyaAdi, $yeniDosyaAdi);
-function changeFileName($oldName, $newName)
+function copyFile($oldName, $newName)
 {
     // Dosyanın var olup olmadığını kontrol et
     if (file_exists($oldName)) {
-        // Dosya adını değiştirme işlemi
-        if (rename($oldName, $newName)) {
-            return "Dosya adı başarıyla değiştirildi!";
+        // Dosya kopyalama işlemi
+        if (copy($oldName, $newName)) {
+            return "Dosya başarıyla kopyalandı!";
         } else {
-            return "Dosya adı değiştirilemedi!";
+            return "Dosya kopyalanamadı!";
         }
     } else {
         return "Dosya bulunamadı!";
@@ -142,31 +141,68 @@ function dd($e)
 
 foreach ($paths as $i => $e) {
 
-    // files name fix
-    $arr = ["(1)", "(2)", "(3)", "(4)", "(5)", "(6)", "(7)", "(8)", "(9)", "(10)"];
-    $e = trim(str_replace($arr, "", substr($e, 1)));
 
+    // files name number fix
+    $arr = [];
+    for ($x = 0; $x < 150; $x++) {
+        $arr[] = "($x)";
+    }
+    $e = trim(str_replace($arr, "", substr($e, 1)));
     $paths[$i] = $e;
 }
+
 foreach ($newPaths as $i => $e) {
-    $newPaths[$i] = substr($e, 1);
-}
+
+    // klasörlerden nokta sil
+    $dotAfter = explode('.', $e);
+    $dotAfter = end($dotAfter);
+    $dotbefore = substr($e, 0, (strlen($dotAfter) + 1) * -1);
+    $dotbefore = str_replace('.', '', $dotbefore);
+
+    $e = $dotbefore . "." . $dotAfter;
+    $e = substr($e, 1);
 
 
-foreach ($paths as $i => $e) {
-    if ($e != "index.php") {
-        createFoldersIfNotExist("new/" . $newPaths[$i]);
-        changeFileName($e, "new/" . $newPaths[$i]);
-    }
+    $newPaths[$i] = $e;
 }
+
 
 $content = "";
 foreach ($paths as $i => $e) {
-    $x = explode("/", $e);
-    $x = end($x);
-    $x = trim(explode(".", $x)[0]);
-    $h = str_replace("\\", "/", $newPaths[$i]);
-    $content .= "<a href=\"https://admin.antalya.edu.tr/files/ikk-files/$h\">$x</a>\n";
+    if (substr($e, 0, strlen("files")) == "files") {
+        createFoldersIfNotExist("new/" . $newPaths[$i]);
+        copyFile($e, "new/" . $newPaths[$i]);
+
+        $x = explode("/", $e);
+        $x = end($x);
+        $x = trim(explode(".", $x)[0]);
+        $h = str_replace("\\", "/", $newPaths[$i]);
+        $content .= "<br><br><a target=\"_blank\" href=\"https://admin.antalya.edu.tr/$h\">$x</a>\n";
+    }
 }
 
-echo $content;
+function yazdirDosyaya($dosyaAdi, $veri)
+{
+    // Dosyayı yazma modunda açar (eğer yoksa oluşturur)
+    $dosya = fopen($dosyaAdi, 'w'); // 'a' modu, dosyanın sonuna ekler
+
+    if ($dosya) {
+        // Veriyi dosyaya yazar
+        fwrite($dosya, $veri . PHP_EOL);
+        // Dosyayı kapatır
+        fclose($dosya);
+        return true; // Başarıyla yazıldıysa true döner
+    } else {
+        return false; // Dosya açılamazsa false döner
+    }
+}
+
+$bt5Head = "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Title</title><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css\" rel=\"stylesheet\"integrity=\"sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN\" crossorigin=\"anonymous\"><script src=\"https://code.jquery.com/jquery-3.7.1.min.js\"integrity=\"sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=\" crossorigin=\"anonymous\"></script></head><body><div class=\"container-fluid\"><div class=\"row\"><div class=\"col-12\">\n\n\n";
+$bt5Footer = "\n\n\n</div></div></div><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js\"integrity=\"sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL\"crossorigin=\"anonymous\"></script><script src=\"https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js\"integrity=\"sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r\"crossorigin=\"anonymous\"></script><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js\"integrity=\"sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+\"crossorigin=\"anonymous\"></script></body></html>";
+$content = $bt5Head . $content . $bt5Footer;
+
+if (yazdirDosyaya("index.html", $content)) {
+    echo "ok";
+} else {
+    echo "Dosya açılamadı.";
+}
