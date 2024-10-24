@@ -83,9 +83,13 @@ foreach ($paths as $i => $e) {
     $copyResult = copyFile($e, $new);
 
     if (strpos($copyResult, 'başarıyla kopyalandı') !== false) {
-        $x = pathinfo($new, PATHINFO_FILENAME);
+        $name = explode("/", $old);
+        $name = end($name);
+        $nameExtension = explode(".", $name);
+        $trimLast = (intval(strlen(end($nameExtension))) + 1) * -1;
+        $name = trim(substr($name, 0, $trimLast));
         $h = str_replace("\\", "/", $new);
-        $content .= "<br><br><a target=\"_blank\" href=\"https://admin.antalya.edu.tr/$h\">$x</a>\n";
+        $content .= "<br><br><a target=\"_blank\" href=\"https://admin.antalya.edu.tr/$h\">$name</a>\n";
     } else {
         echo $copyResult; // Hata mesajını ekrana yazdır
     }
